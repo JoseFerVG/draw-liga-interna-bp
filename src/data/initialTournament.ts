@@ -122,12 +122,12 @@ export const INITIAL_ROUNDS: Round[] = [
   },
 ];
 
-export function createInitialTournamentState(): TournamentState {
+export function createInitialTournamentState(updatedAt = '2026-01-01T00:00:00.000Z'): TournamentState {
   return {
     version: 1,
     title: 'Liga Interna · Torneo BP Miércoles',
     subtitle: '24 equipos · 6 salas · 4 rondas · Formato Parlamentario Británico',
-    updatedAt: new Date().toISOString(),
+    updatedAt,
     teams: INITIAL_TEAMS.map((t) => ({ ...t })),
     rounds: INITIAL_ROUNDS.map((r) => ({
       ...r,

@@ -18,6 +18,7 @@ import {
   pullCloudState,
   pushCloudState,
   saveCloudConfig,
+  subscribeCloudState,
   type CloudConfigStorage,
 } from './lib/cloudSync';
 import type { RoomAssignment, Round, TournamentState } from './types';
@@ -96,31 +97,41 @@ export function App() {
     saveLocalState(state);
   }, [state]);
 
-  // Optional Firestore polling sync
+  const latestUpdatedAtRef = useRef(state.updatedAt);
+  latestUpdatedAtRef.current = state.updatedAt;
+  const seededRef = useRef(false);
+
+  // Real-time Firestore sync (onSnapshot)
   useEffect(() => {
     if (!cloudConfig) return;
-    let active = true;
-    const syncDown = async () => {
-      try {
-        const remote = await pullCloudState(cloudConfig);
-        if (!active) return;
-        if (remote && remote.updatedAt > state.updatedAt) {
-          setState(remote);
-          setCloudStatus('Sincronizado');
-        } else {
-          setCloudStatus('Conectado');
+    setCloudStatus('Conectando...');
+    const unsubscribe = subscribeCloudState(
+      cloudConfig,
+      (remote) => {
+        if (!remote) {
+          if (!seededRef.current) {
+            seededRef.current = true;
+            pushCloudState(cloudConfig, state)
+              .then(() => setCloudStatus('Sincronizado en vivo'))
+              .catch(() => setCloudStatus('Error al inicializar nube'));
+          } else {
+            setCloudStatus('Conectado (sin datos)');
+          }
+          return;
         }
-      } catch {
-        if (active) setCloudStatus('Error de red');
-      }
-    };
-    syncDown();
-    const id = window.setInterval(syncDown, 5000);
-    return () => {
-      active = false;
-      window.clearInterval(id);
-    };
-  }, [cloudConfig, state.updatedAt]);
+        if (remote.updatedAt > latestUpdatedAtRef.current) {
+          setState(remote);
+        }
+        setCloudStatus('Sincronizado en vivo');
+      },
+      (err) => {
+        console.warn('Firestore listener error:', err);
+        setCloudStatus('Error de sincronización');
+      },
+    );
+    return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cloudConfig]);
 
   const mutateState = useCallback(
     (updater: (prev: TournamentState) => TournamentState) => {
@@ -394,9 +405,9 @@ export function App() {
             notify('Error al subir a Firestore (revisa reglas/API key)');
           }
         }}
-        onImportState={(next) => setState(next)}
+        onImportState={(next) => mutateState(() => next)}
         onResetTournament={() => {
-          setState(createInitialTournamentState());
+          mutateState(() => createInitialTournamentState(new Date().toISOString()));
           notify('Cuadrante óptimo original restaurado');
         }}
         onNotify={notify}
