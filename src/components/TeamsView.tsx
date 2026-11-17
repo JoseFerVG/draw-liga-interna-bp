@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Sparkles } from 'lucide-react';
+import { CheckCircle2, Clock, Search, Sparkles } from 'lucide-react';
 import { POSITIONS, type Round, type Team } from '../types';
 
 interface TeamsViewProps {
@@ -8,9 +8,17 @@ interface TeamsViewProps {
   canEdit: boolean;
   onRenameTeam: (teamId: string, newName: string) => void;
   onToggleSwing: (teamId: string) => void;
+  onToggleCheckIn: (teamId: string) => void;
 }
 
-export function TeamsView({ teams, rounds, canEdit, onRenameTeam, onToggleSwing }: TeamsViewProps) {
+export function TeamsView({
+  teams,
+  rounds,
+  canEdit,
+  onRenameTeam,
+  onToggleSwing,
+  onToggleCheckIn,
+}: TeamsViewProps) {
   const [filter, setFilter] = useState<'all' | 'swings'>('all');
   const [search, setSearch] = useState('');
 
@@ -98,12 +106,30 @@ export function TeamsView({ teams, rounds, canEdit, onRenameTeam, onToggleSwing 
                 <button
                   type="button"
                   disabled={!canEdit}
+                  onClick={() => onToggleCheckIn(team.id)}
+                  className={`badge ${team.checkedIn ? 'badge-ok' : ''}`}
+                  style={{
+                    border: '1px solid var(--border)',
+                    padding: '0.35rem 0.55rem',
+                    cursor: canEdit ? 'pointer' : 'default',
+                    flexShrink: 0,
+                  }}
+                  title={team.checkedIn ? 'Presente (pulsa para marcar pendiente)' : 'Pendiente (pulsa para hacer check-in)'}
+                  aria-pressed={Boolean(team.checkedIn)}
+                >
+                  {team.checkedIn ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                  {team.checkedIn ? 'Presente' : 'Pend.'}
+                </button>
+                <button
+                  type="button"
+                  disabled={!canEdit}
                   onClick={() => onToggleSwing(team.id)}
                   className={`badge ${team.isSwing ? 'badge-swing' : ''}`}
                   style={{
                     border: '1px solid var(--border)',
                     padding: '0.35rem 0.55rem',
                     cursor: canEdit ? 'pointer' : 'default',
+                    flexShrink: 0,
                   }}
                   title="Marcar o desmarcar como equipo Swing"
                 >

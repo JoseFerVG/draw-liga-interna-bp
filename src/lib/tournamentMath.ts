@@ -265,9 +265,29 @@ export function formatStandingsForWhatsApp(standings: TeamStanding[]): string {
   return lines.join('\n');
 }
 
+export function formatCheckInForWhatsApp(teams: Team[]): string {
+  const checkedIn = teams.filter((t) => t.checkedIn);
+  const pending = teams.filter((t) => !t.checkedIn);
+  const lines = [
+    '*CHECK-IN — LIGA INTERNA BP*',
+    `Presentes: ${checkedIn.length}/${teams.length}`,
+    '',
+  ];
+
+  if (pending.length === 0) {
+    lines.push('Todos los equipos han llegado y hecho check-in.');
+  } else {
+    lines.push(`*Pendientes por llegar (${pending.length}):*`);
+    for (const t of pending) {
+      lines.push(`  • ${t.name}${t.isSwing ? ' (Swing)' : ''}`);
+    }
+  }
+  return lines.join('\n');
+}
+
 export function exportTournamentCSV(state: TournamentState): string {
   const teamsMap = buildTeamsMap(state.teams);
-  const rows = [['Ronda', 'Sala', 'Juez', 'Posicion', 'Equipo', 'Swing', 'Puesto', 'Puntos_BP', 'Puntos_Orador']];
+  const rows = [['Ronda', 'Sala', 'Juez', 'Posicion', 'Equipo', 'Swing', 'Check_In', 'Puesto', 'Puntos_BP', 'Puntos_Orador']];
   for (const round of state.rounds) {
     for (const room of round.rooms) {
       for (const pos of POSITIONS) {
@@ -282,6 +302,7 @@ export function exportTournamentCSV(state: TournamentState): string {
           pos,
           team?.name ?? room.teams[pos],
           team?.isSwing ? 'Sí' : 'No',
+          team?.checkedIn ? 'Sí' : 'No',
           rank ? String(rank) : '',
           String(pts),
           String(spk),

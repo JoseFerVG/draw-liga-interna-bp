@@ -843,3 +843,190 @@ dialog::backdrop {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 0.75rem;
 }
+
+/* Check-in View */
+.checkin-dot-ok {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ok-ink);
+}
+
+.checkin-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.1rem;
+  display: grid;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.checkin-summary-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.checkin-progress-track {
+  inline-size: 100%;
+  block-size: 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.checkin-progress-fill {
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--ok-ink);
+  transition: width 220ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkin-progress-fill {
+    transition: none;
+  }
+}
+
+.checkin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0.75rem;
+}
+
+.checkin-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-block-size: 44px;
+  padding: 0.75rem 0.95rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.checkin-card:hover:not(.checkin-card-readonly) {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.checkin-card-swing {
+  border-style: dashed;
+  border-color: var(--swing-ink);
+}
+
+.checkin-card-checked {
+  background: var(--ok-bg);
+  border-color: var(--ag-border);
+}
+
+.checkin-card-checked:hover:not(.checkin-card-readonly) {
+  background: var(--ok-bg);
+}
+
+.checkin-card-readonly {
+  cursor: default;
+}
+
+.checkin-checkbox {
+  --checkbox-size: 1.35em;
+  --checkbox-icon-size: 0.8em;
+  --icon-check: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'></polyline></svg>");
+
+  appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  inline-size: var(--checkbox-size);
+  aspect-ratio: 1;
+  margin: 0;
+  border-radius: 6px;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--surface);
+  cursor: pointer;
+}
+
+.checkin-checkbox::before {
+  content: '';
+  inline-size: var(--checkbox-icon-size);
+  aspect-ratio: 1;
+  background-color: currentColor;
+  mask: var(--icon-check) no-repeat center / contain;
+  scale: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .checkin-checkbox::before {
+    transition: scale 150ms ease;
+  }
+}
+
+@media (forced-colors: active) {
+  .checkin-checkbox::before {
+    background-color: CanvasText;
+  }
+}
+
+.checkin-checkbox:checked {
+  background: var(--ok-ink);
+  border-color: var(--ok-ink);
+}
+
+.checkin-checkbox:checked::before {
+  scale: 1;
+}
+
+.checkin-checkbox:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.checkin-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.checkin-card-body {
+  display: grid;
+  gap: 0.3rem;
+  min-inline-size: 0;
+  flex: 1 1 auto;
+}
+
+.checkin-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.checkin-team-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.checkin-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.checkin-empty {
+  padding: 1.5rem;
+  text-align: center;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}

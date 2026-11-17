@@ -245,6 +245,15 @@ export function RoundsView({
                       </div>
                       <div className="bench-team">
                         <span>{teamName}</span>
+                        {!projectorMode && team?.checkedIn && (
+                          <span
+                            className="checkin-dot-ok"
+                            title="Check-in realizado"
+                            aria-label="Check-in realizado"
+                          >
+                            <CheckCircle2 size={13} />
+                          </span>
+                        )}
                         {team?.isSwing && <span className="badge badge-swing">Swing</span>}
                       </div>
                     </div>

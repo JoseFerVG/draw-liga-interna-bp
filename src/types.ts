@@ -20,6 +20,8 @@ export interface Team {
   id: string;
   name: string;
   isSwing: boolean;
+  checkedIn?: boolean;
+  checkedInAt?: string;
 }
 
 export interface RoomAssignment {

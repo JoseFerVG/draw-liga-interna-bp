@@ -8,6 +8,7 @@ import {
   Sun,
   Trophy,
   Unlock,
+  UserCheck,
   Users,
 } from 'lucide-react';
 import { createInitialTournamentState } from './data/initialTournament';
@@ -23,20 +24,14 @@ import {
 } from './lib/cloudSync';
 import type { RoomAssignment, Round, TournamentState } from './types';
 import { RoundsView } from './components/RoundsView';
+import { CheckInView } from './components/CheckInView';
 import { TeamsView } from './components/TeamsView';
 import { MatrixView } from './components/MatrixView';
 import { StandingsView } from './components/StandingsView';
 import { RoomModal } from './components/RoomModal';
 import { ShareModal } from './components/ShareModal';
 
-type TabId = 'rounds' | 'teams' | 'matrix' | 'standings';
-
-const TABS: Array<{ id: TabId; label: string; icon: typeof LayoutGrid }> = [
-  { id: 'rounds', label: 'Salas y Rondas', icon: LayoutGrid },
-  { id: 'teams', label: 'Equipos y Swings (24)', icon: Users },
-  { id: 'matrix', label: 'Matriz 4 Rondas', icon: Grid },
-  { id: 'standings', label: 'Clasificación', icon: Trophy },
-];
+type TabId = 'rounds' | 'checkin' | 'teams' | 'matrix' | 'standings';
 
 export function App() {
   const [state, setState] = useState<TournamentState>(() => loadLocalState() ?? createInitialTournamentState());
@@ -205,6 +200,43 @@ export function App() {
     }));
   };
 
+  const handleToggleCheckIn = (teamId: string) => {
+    const target = state.teams.find((t) => t.id === teamId);
+    const nextChecked = !target?.checkedIn;
+    mutateState((prev) => ({
+      ...prev,
+      teams: prev.teams.map((t) =>
+        t.id === teamId
+          ? {
+              ...t,
+              checkedIn: !t.checkedIn,
+              checkedInAt: !t.checkedIn ? new Date().toISOString() : undefined,
+            }
+          : t,
+      ),
+    }));
+    if (target) {
+      notify(nextChecked ? `Check-in: ${target.name}` : `Check-in retirado: ${target.name}`);
+    }
+  };
+
+  const handleResetCheckIn = () => {
+    mutateState((prev) => ({
+      ...prev,
+      teams: prev.teams.map((t) => ({ ...t, checkedIn: false, checkedInAt: undefined })),
+    }));
+    notify('Check-in reiniciado');
+  };
+
+  const checkedInCount = state.teams.filter((t) => t.checkedIn).length;
+  const tabs: Array<{ id: TabId; label: string; icon: typeof LayoutGrid }> = [
+    { id: 'rounds', label: 'Salas y Rondas', icon: LayoutGrid },
+    { id: 'checkin', label: `Check-in (${checkedInCount}/${state.teams.length})`, icon: UserCheck },
+    { id: 'teams', label: `Equipos y Swings (${state.teams.length})`, icon: Users },
+    { id: 'matrix', label: 'Matriz 4 Rondas', icon: Grid },
+    { id: 'standings', label: 'Clasificación', icon: Trophy },
+  ];
+
   const selectTab = (tabId: TabId) => {
     setActiveTab(tabId);
     tabRefs.current[tabId]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -215,9 +247,9 @@ export function App() {
     e.preventDefault();
     const nextIdx =
       e.key === 'ArrowRight'
-        ? (idx + 1) % TABS.length
-        : (idx - 1 + TABS.length) % TABS.length;
-    const nextTab = TABS[nextIdx].id;
+        ? (idx + 1) % tabs.length
+        : (idx - 1 + tabs.length) % tabs.length;
+    const nextTab = tabs[nextIdx].id;
     selectTab(nextTab);
     tabRefs.current[nextTab]?.focus();
   };
@@ -264,6 +296,9 @@ export function App() {
         <div className="status-strip">
           <div className="status-pills">
             <span className="badge">24 equipos · 6 salas · 4 rondas</span>
+            <span className={`badge ${checkedInCount === state.teams.length ? 'badge-ok' : ''}`}>
+              Check-in: {checkedInCount}/{state.teams.length}
+            </span>
             <span className={`badge ${audit.isPerfect ? 'badge-ok' : 'badge-warn'}`}>
               {audit.isPerfect
                 ? 'Equilibrio BP 100% (0 cruces repetidos · 4 posiciones exactas)'
@@ -282,7 +317,7 @@ export function App() {
           role="tablist"
           aria-label="Vistas del torneo"
         >
-          {TABS.map((t, idx) => {
+          {tabs.map((t, idx) => {
             const Icon = t.icon;
             const selected = activeTab === t.id;
             return (
@@ -331,6 +366,21 @@ export function App() {
 
         <div
           role="tabpanel"
+          aria-labelledby="tab-checkin"
+          hidden={projectorMode || activeTab !== 'checkin'}
+        >
+          <CheckInView
+            teams={state.teams}
+            rounds={state.rounds}
+            canEdit={canEdit}
+            onToggleCheckIn={handleToggleCheckIn}
+            onResetCheckIn={handleResetCheckIn}
+            onNotify={notify}
+          />
+        </div>
+
+        <div
+          role="tabpanel"
           aria-labelledby="tab-teams"
           hidden={projectorMode || activeTab !== 'teams'}
         >
@@ -340,6 +390,7 @@ export function App() {
             canEdit={canEdit}
             onRenameTeam={handleRenameTeam}
             onToggleSwing={handleToggleSwing}
+            onToggleCheckIn={handleToggleCheckIn}
           />
         </div>
 
